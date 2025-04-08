@@ -2,17 +2,12 @@ import streamlit as st
 import pandas as pd
 from joblib import load
 import numpy as np
-from flask import Flask
-from io import BytesIO
-
-# 初始化 Flask 应用
-flask_app = Flask(__name__)
 
 # 加载模型和标准化器
 gbdt_model = load('gbdt_model.joblib')
 scaler = load('scaler.joblib')
 
-# Streamlit 页面配置
+# 页面设置
 st.set_page_config(page_title="ILD 分级预测", page_icon="🧑‍⚕️", layout="wide")
 
 # 页面标题和描述
@@ -82,22 +77,3 @@ with col2:
         - 在输入过程中，结果将会自动更新。
         - 你可以根据需要修改输入的参数来查看不同情况的预测结果。
     """)
-
-# Flask API: 返回预测结果
-@flask_app.route('/predict', methods=['POST'])
-def predict():
-    # 通过 POST 请求获取用户输入
-    input_data = request.get_json()  # 获取请求数据
-    df = pd.DataFrame([input_data])
-    
-    # 标准化并进行预测
-    X_new_scaled = scaler.transform(df)
-    prob = gbdt_model.predict_proba(X_new_scaled)[0][1]
-    result = "ILD分级为1级" if prob >= 0.5 else "ILD分级为0级"
-    
-    # 返回预测结果
-    return jsonify({"result": result, "probability": prob})
-
-# 运行 Flask API
-if __name__ == "__main__":
-    flask_app.run(debug=True)
